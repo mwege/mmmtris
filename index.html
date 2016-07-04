@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>hello phaser!</title>
+        <script src="phaser.min.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    var music;
+
+    var sprite_pos = 2;
+    var sprite_idx = 0;
+    window.onload = function() {
+
+
+
+  //      var persons[] = {"a cow", "a cook", "a girl", "a cookiemonster", "a dark knight", "a soccer player", "a green witch", "the gardener", "Michael Jackson"};
+  //      var verbs[] = {"sings", "eats", "drinks", "loves", "sees", "thinks", "catches", "raves", "calls"};
+  //      var nomos[] = {"a rabbit", "a car", "the queen", "a coffee", "a song", "the guitar"};
+
+
+        var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+        var blockT;
+        var blockA;
+        var blockF;
+        var blockN;
+
+        var cursors;
+
+        var corner_top;
+        var corner_left;
+        var corner_right;
+
+        var sprite;
+
+        var last_key_press = 0;
+        var level_speed = -20;
+        var old_sprites = [];
+
+
+        var result;
+        var checked = false;
+
+
+        function checkResult(){
+          return (result[0][0] == 'T' &&
+              result[0][1] == 'A' &&
+              result[0][2] == '-' &&
+              result[0][3] == 'T' &&
+              result[0][4] == 'A' &&
+              result[1][0] == 'F' &&
+              result[1][1] == '-' &&
+              result[1][2] == 'A' &&
+              result[1][3] == 'F' &&
+              result[1][4] == '-' &&
+              result[1][5] == 'A');
+        }
+
+
+        function preload () {
+            result = new Array(64);
+            for (var i = 0; i < 64; i++) {
+              result[i] = new Array(64);
+              for (var j = 0 ; j < 64 ; j++) {
+                result[i][j] = '';
+              }
+            }
+            game.load.spritesheet('blocks', 'blocks.png', 75, 75);var character = game.add.sprite(0, 0, 'character');character.frame = 0; //Character idle imagecharacter.frame = 1; //Character jump image
+            game.load.image('logo', '400.png');
+            game.load.audio('bg', ['mmmtris.mp3', 'mmmtris.ogg'])
+            game.load.image('bt', 'blockt.png');
+            game.load.image('bf', 'blockf.png');
+            game.load.image('ba', 'blocka.png');
+            game.load.image('bn', 'blockn.png');
+            game.load.image('cornerlr', 'cornerlr.png');
+            game.load.image('cornertd', 'cornertd.png');
+            game.load.image('fetti', 'fetti.png');
+            sprite_pos = 2;
+            sprite_idx = 0;
+        }
+
+        function create () {
+            game.physics.startSystem(Phaser.Physics.ARCADE);
+            game.physics.arcade.gravity.y = 0;
+
+            var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
+            logo.anchor.setTo(0.5, 0.5);
+            music = game.add.audio('bg');
+            music.play();
+
+            corner_left = game.add.sprite(300, 50, 'cornerlr');
+            corner_right = game.add.sprite(700, 50, 'cornerlr');
+            corner_top = game.add.sprite(300, 50, 'cornertd');
+
+
+            sprite = game.add.sprite(game.world.centerX, 500, 'blocks');
+            sprite.scale.setTo(0.5, 0.5);
+            game.physics.enable( [ sprite, corner_top ], Phaser.Physics.ARCADE);
+
+            corner_top.body.immovable = true;
+            corner_top.body.allowGravity = false;
+
+            sprite.body.velocity.y = -20;
+            sprite.body.gravity.y = 0;
+            sprite.body.collideWorldBounds = true;
+
+
+            cursors = game.input.keyboard.createCursorKeys();
+
+            var style = { font: "bold 20px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+            text = game.add.text(30, 70, "IF the cow eats a potato", style);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+
+            text = game.add.text(30, 110, "THEN kick the ninja", style);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+
+            text = game.add.text(30, 150, "OTHERWISE eat the potato ", style);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+
+            text = game.add.text(30, 190, "IF the potato was good ", style);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+            text = game.add.text(30, 230, "THEN return with an apple ", style);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+            text = game.add.text(30, 270, "OTHERWISE eat the snake ", style);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+
+
+        }
+        function update() {
+            game.physics.arcade.collide(sprite, corner_top, collisionHandler, null, this);
+
+            for (var i = 0; i < old_sprites.length; i++) {
+              game.physics.arcade.collide(sprite, old_sprites[i], collisionHandler, null, this);
+            }
+
+            if ( last_key_press + 100  < game.time.now) {
+              last_key_press = game.time.now
+
+            if (cursors.left.isDown){
+              if (sprite.x > 360) {
+                sprite.x -= sprite.width;
+                sprite_pos -= 1;
+              }
+            } else if (cursors.right.isDown) {
+              if (sprite.x < 650) {
+                sprite.x += sprite.width;
+                sprite_pos += 1;
+              }
+            } else if (cursors.up .isDown){
+              sprite.body.velocity.y = -200;
+            };
+            if (cursors.up.isUp) {
+              sprite.body.velocity.y = -20;
+            }
+            if (cursors.down.isDown) {
+              sprite.frame += 1;
+              sprite_idx = (sprite_idx + 1) % 4;
+            }
+
+
+            //if (cursor.top.isUp){
+            //  level_speed = -20;
+            //}
+            //sprite.y -= level_speed;
+          }
+
+        }
+
+        function collisionHandler (obj1, obj2) {
+          old_sprites.push(sprite);
+          sprite.body.immovable = true;
+          sprite.body.allowGravity = false
+
+          sprite = game.add.sprite(game.world.centerX, 500, 'blocks');
+          sprite.scale.setTo(0.5, 0.5);
+          game.physics.enable( [ sprite ], Phaser.Physics.ARCADE);
+
+          sprite.body.velocity.y = -20;
+          sprite.body.gravity.y = 0;
+          sprite.body.collideWorldBounds = true;
+
+
+          for (var i = 0; i < 64; i++) {
+            if (result[sprite_pos][i] == ''){
+              switch(sprite_idx){
+                case 0: result[sprite_pos][i] = 'T';
+                  break;
+                case 1: result[sprite_pos][i] = 'F'; break;
+                case 2: result[sprite_pos][i] = 'A'; break;
+                case 3: result[sprite_pos][i] = '-'; break;
+                default:
+              }
+              break;
+            }
+          }
+
+          sprite_pos = 2;
+          sprite_idx = 0;
+
+
+          if (!checked && checkResult()) {
+            emitter = game.add.emitter(game.world.centerX, 200, 200);
+            emitter.makeParticles('fetti');
+            emitter.start(false, 5000, 20);
+
+
+            for (var i = 0; i < old_sprites.length; i++) {
+              old_sprites[i].body.gravity = 10;
+              old_sprites[i].body.velocity.y = -20;
+              old_sprites[i].body.immovable = false;
+              old_sprites[i].body.allowGravity = true;
+            }
+
+            checked = true;
+          }
+        }
+
+    };
+
+    </script>
+
+    </body>
+</html>
